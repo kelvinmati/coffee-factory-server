@@ -2,31 +2,34 @@ import jwt from "jsonwebtoken";
 import User from "../models/user.js";
 import Coffee from "../models/coffee.js";
 import dot_env from "dotenv";
-import user from "../models/user.js";
 import Payment from "../models/payment.js";
+import bcrypt from "bcrypt";
 dot_env.config();
 // register user
 export const register = async (req, res) => {
   const { firstname, lastname, role, email, password, phone_number, gender } =
     req.body;
   try {
-    // const farmerId = Math.random().toString(36).slice(3);
-    const farmerId = Math.floor(1000 + Math.random() * 9000);
+    // assign a user a random id
+    const userId = Math.floor(1000 + Math.random() * 9000);
     // console.log("random no", randomNo);
     // check if the user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json(`Sorry ${email} already exists`);
     }
+    // hash user password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    // store data in the database
     await User.create({
       firstname,
       lastname,
       role,
       email,
-      password,
+      password: hashedPassword,
       phone_number,
       gender,
-      farmerId,
+      farmerId: userId,
     });
     // generate  and asign token to the registered user
     // query the new specific user
@@ -44,8 +47,12 @@ export const login = async (req, res) => {
   try {
     // check if given email and password matches the one in the db
     const existingUser = await User.findOne({ email });
-
-    if (!existingUser || existingUser.password !== password)
+    // check if passwords match
+    const isPasswordCorrect = await bcrypt.compare(
+      password,
+      existingUser.password
+    );
+    if (!isPasswordCorrect)
       return res.status(409).json("Invalid credentials !!.Try again");
 
     // generate and assign login token
@@ -162,6 +169,31 @@ export const getUserProfile = async (req, res) => {
     } else {
       return res.status(200).json(currentUser);
     }
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
+
+// forgot password
+export const forgotPassword = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    // ensure the user exists
+    const existingUser = await User.findOne({ email });
+    if (!existingUser)
+      return res.status(404).json({ message: `${email} does not exist` });
+    // hash user password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const updatedUser = await User.findOneAndUpdate(
+      { email },
+      { $set: { password: hashedPassword } },
+      { new: true }
+    );
+    res.status(200).json({
+      message: "You have successfully reset your password",
+      updatedUser,
+    });
   } catch (error) {
     res.status(500).json(error);
   }

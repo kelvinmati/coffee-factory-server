@@ -16,6 +16,7 @@
 
 import express from "express";
 const router = express.Router();
+import auth from "../middleware/auth.js";
 import {
   getAllTrasanctions,
   getPayableFarmers,
@@ -30,7 +31,7 @@ router.get("/pay/:farmer_id", makePayment);
 router.get("/transactions", getAllTrasanctions);
 router.get("/farmer-transaction/:farmerId", getSingleTransaction);
 router.post("/withdraw/:farmerId", withdrawal);
-router.get("/pay-all", payAll);
+router.get("/pay-all", auth, payAll);
 router.get("/reset", resetPayment);
 
 export default router;

@@ -32,7 +32,9 @@ export const deposit = async (req, res) => {
     );
     return res
       .status(200)
-      .json({ message: `You have succesfully deposited Ksh${deposit_amount}` });
+      .json({
+        message: `You have succesfully deposited Ksh ${deposit_amount}`,
+      });
   } catch (error) {
     return res.status(500).json(error);
   }

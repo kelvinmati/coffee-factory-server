@@ -7,12 +7,14 @@ import {
   getAllFarmers,
   specificFarmer,
   getAllStaff,
+  forgotPassword,
 } from "../controllers/user.js";
 import auth from "../middleware/auth.js";
 const router = express.Router();
 
 router.post("/register", register);
 router.post("/login", login);
+router.post("/forgot-password", forgotPassword);
 
 router.get("/staff", getAllStaff);
 

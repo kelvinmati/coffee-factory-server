@@ -68,7 +68,6 @@ import dot_env from "dotenv";
 dot_env.config();
 
 // filter payable farmers
-
 export const getPayableFarmers = async (req, res) => {
   try {
     const payableFarmers = await Farmers.find({
@@ -213,7 +212,7 @@ export const payAll = async (req, res) => {
       { value: { $gt: 0 }, role: "farmer" },
       async (err, farmers) => {
         // if (err) return res.status(403).json(err);
-        // confirm farmers are found
+        // get eligible farmers for payment
         if (farmers?.length == 0) {
           return res.status(404).json({
             message: "Failed! There is no payable farmer at the moment",
@@ -223,7 +222,7 @@ export const payAll = async (req, res) => {
           const totalPaidArr = farmers.map((farmer) => {
             return parseInt(farmer.value);
           });
-          // add totals
+          // add paid amounts in array
           const totalAmout = totalPaidArr.reduce((a, b) => {
             return a + b;
           });
