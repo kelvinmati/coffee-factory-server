@@ -23,7 +23,7 @@ const userSchema = schema(
       required: [true, "Password is required"],
     },
     phone_number: {
-      type: String,
+      type: Number,
       required: [true, "Phone number is required"],
     },
 
@@ -56,8 +56,9 @@ const userSchema = schema(
     paid: {
       type: Boolean,
       default: false,
-      required: true,
+      // required: true,
     },
+
     paymentRecord: [
       {
         type: schema.Types.ObjectId,

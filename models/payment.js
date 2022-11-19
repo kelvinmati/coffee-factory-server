@@ -6,25 +6,22 @@ const paymentSchema = schema(
       type: String,
       required: [true, "Name is required"],
     },
-    // coffeeDetails: [
-    //   {
-    //     type: String,
-    //   },
-    // ],
     farmerId: {
       type: String,
       required: [true, "Farmer id is required"],
     },
     quantity: {
       type: Number,
+      default: 0,
       required: [true, "Quantity is required"],
     },
     amount: {
       type: Number,
+      default: 0,
       required: [true, "Amount is required"],
     },
     phone: {
-      type: String,
+      type: Number,
       required: [true, "phone number is required"],
     },
   },

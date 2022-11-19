@@ -21,9 +21,9 @@ app.use("/account", accountRoute);
 // db connection
 mongoose
   .connect(`${process.env.MONGODB_URL}`)
-  .then(() => console.log("db connected succesfully"))
+  .then(() => console.log("Database connected succesfully"))
   .catch((err) => console.log(err));
 
 // server setup
 const PORT = 4000;
-app.listen(PORT, () => console.log(`server started at port ${PORT}`));
+app.listen(PORT, () => console.log(`Server started at port ${PORT}`));

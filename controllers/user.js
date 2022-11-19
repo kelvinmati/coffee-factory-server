@@ -12,7 +12,7 @@ export const register = async (req, res) => {
   try {
     // assign a user a random id
     const userId = Math.floor(1000 + Math.random() * 9000);
-    // console.log("random no", randomNo);
+
     // check if the user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -104,9 +104,9 @@ export const uploadFarmerCoffee = async (req, res) => {
     const returnedFarmer = {
       // coffeeDetails: populatedFarmer.coffeeDetails,
       farmer: populatedFarmer?.firstname.concat(" ", populatedFarmer?.lastname),
-      message: "succesfully uploaded",
+      message: "Succesfully uploaded",
     };
-    return res.status(200).json({ returnedFarmer });
+    return res.status(200).json(returnedFarmer);
   } catch (error) {
     res.status(500).json(error);
   }
@@ -194,6 +194,41 @@ export const forgotPassword = async (req, res) => {
       message: "You have successfully reset your password",
       updatedUser,
     });
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
+// delete user
+export const deleteUser = async (req, res) => {
+  const { user_id } = req.params;
+  try {
+    // search user
+    const foundUser = await User.findByIdAndDelete({ _id: user_id });
+    res.status(200).json({ message: "User succesfully deleted" });
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
+// update user details
+export const userUpdate = async (req, res) => {
+  const { user_id } = req.params;
+  const { firstname, lastname, phone_number, gender } = req.body;
+  try {
+    const existingUser = await User.findById({ _id: user_id });
+    // if (!existingUser)
+    //   return res.status(403).json({ message: "User does not exist" });
+    // hash user password
+    // const hashedPassword = await bcrypt.hash(password, 10);
+    const updatedUser = await User.findOneAndUpdate(
+      {
+        _id: existingUser._id,
+      },
+      {
+        $set: { firstname, lastname, phone_number, gender },
+      },
+      { new: true }
+    );
+    return res.status(200).json({ message: "User successfully updated" });
   } catch (error) {
     res.status(500).json(error);
   }

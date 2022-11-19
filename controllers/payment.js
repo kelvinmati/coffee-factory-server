@@ -65,6 +65,7 @@ import Payment from "../models/payment.js";
 import Farmers from "../models/user.js";
 import Account from "../models/account.js";
 import dot_env from "dotenv";
+import account from "../models/account.js";
 dot_env.config();
 
 // filter payable farmers
@@ -85,12 +86,6 @@ export const getPayableFarmers = async (req, res) => {
 export const makePayment = async (req, res) => {
   const { farmer_id } = req.params;
   try {
-    // enable admin only to pay
-    // const admin = await Farmers.find({ role: "admin" });
-    // if (!admin)
-    //   return res
-    //     .status(401)
-    //     .json({ message: "Access denied.Your are not and admin" });
     // find farmer by id provided
     const foundFarmer = await Farmers.findById({ _id: farmer_id }).populate(
       "coffeeDetails"
@@ -203,8 +198,8 @@ export const withdrawal = async (req, res) => {
   }
 };
 
-// pay all farmers
-export const payAll = async (req, res) => {
+// pay all farmers(by manager)
+export const payAllMng = async (req, res) => {
   const account = await Account.findOne();
   try {
     // find all farmers
@@ -234,6 +229,170 @@ export const payAll = async (req, res) => {
             return res.status(404).json({
               message: `Sorry! Insufficient funds.Your account balance is Ksh ${account.account_balance}`,
             });
+          } else {
+            await Account.findOneAndUpdate(
+              {},
+              { $inc: { account_balance: -totalAmout } },
+              { new: true }
+            );
+            // loop through all farmers and increase their wallets
+            farmers.map(async (farmer) => {
+              Farmers.updateMany(
+                { _id: farmer._id },
+                { $inc: { wallet: farmer.value }, $set: { paid: true } },
+                async (err, updatedRes) => {
+                  if (err) return res.status(403).json(err);
+                }
+              );
+              // store payment details in the database
+
+              const storedInfo = await Payment.create({
+                name: farmer?.firstname.concat(" ", farmer?.lastname),
+                farmerId: farmer?.farmerId,
+                quantity: farmer?.totalKilos,
+                amount: farmer?.value,
+                phone: farmer?.phone_number,
+              });
+
+              // populate payment record in the farmers model with id,s
+              await Farmers.updateMany(
+                { _id: farmer._id },
+                {
+                  $push: { paymentRecord: storedInfo._id },
+                  $unset: { coffeeDetails: [] },
+                  $set: { totalKilos: 0, value: 0 },
+                }
+              );
+            });
+            return res
+              .status(200)
+              .json({ message: "Success,You have paid all farmers" });
+          }
+        }
+      }
+    );
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
+
+//notifiy manager
+export const notifyManager = async (req, res) => {
+  try {
+    Farmers.find(
+      { value: { $gt: 0 }, role: "farmer" },
+      async (err, farmers) => {
+        if (farmers?.length == 0) {
+          return res.status(404).json({
+            message: "Failed! There is no payable farmer at the moment",
+          });
+        } else {
+          // store total amount paid in array
+          const totalPaidArr = farmers.map((farmer) => {
+            return parseInt(farmer.value);
+          });
+          // add paid amounts in array
+          const totalAmout = totalPaidArr.reduce((a, b) => {
+            return a + b;
+          });
+          await Account.findOneAndUpdate(
+            {},
+            {
+              $set: {
+                paymentApproval: `Ksh ${totalAmout} waiting aprroval`,
+                approvalAmount: totalAmout,
+              },
+            },
+            { new: true }
+          );
+          return res
+            .status(200)
+            .json({ message: "Kindly wait for payment approval" });
+        }
+      }
+    );
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+};
+
+// approve payment
+export const approvePayment = async (req, res) => {
+  try {
+    const account = await Account.findOne();
+    const requestedApprovalAmount = account.approvalAmount; //amount to approve
+    const accountBalance = account.account_balance; //account balance
+
+    if (requestedApprovalAmount > accountBalance) {
+      return res.status(422).json({
+        message: "Cannot process approval.Insufficent account balance",
+      });
+    }
+    await Account.findOneAndUpdate(
+      {},
+      {
+        $set: {
+          paymentApproval: "approved",
+          approvalAmount: 0,
+        },
+      },
+      { new: true }
+    );
+    // await Account.findOneAndUpdate(
+    //   {},
+    //   {
+    //     $unset: {
+    //       paymentApproval: "",
+    //       approvalAmount: 0,
+    //     },
+    //   },
+    //   { new: true }
+    // );
+    return res.status(200).json({ message: "You have approved payment" });
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+};
+// pay all farmers
+export const payAll = async (req, res) => {
+  const account = await Account.findOne();
+  let approvalMsg = account.paymentApproval;
+  try {
+    // find all farmers
+    Farmers.find(
+      { value: { $gt: 0 }, role: "farmer" },
+      async (err, farmers) => {
+        // if (err) return res.status(403).json(err);
+        // get eligible farmers for payment
+        if (farmers?.length == 0) {
+          return res.status(404).json({
+            message: "Failed! There is no payable farmer at the moment",
+          });
+        } else {
+          // store total amount paid in array
+          const totalPaidArr = farmers.map((farmer) => {
+            return parseInt(farmer.value);
+          });
+          // add paid amounts in array
+          const totalAmout = totalPaidArr.reduce((a, b) => {
+            return a + b;
+          });
+          // console.log("Total Amount is", totalAmout);
+          if (
+            account.account_balance == 0 ||
+            account.account_balance < totalAmout
+          )
+            return res.status(404).json({
+              message: `Sorry! Insufficient funds.Your account balance is Ksh ${account.account_balance}`,
+            });
+
+          // console.log("approvalMsg", approvalMsg);
+          // continue if approved
+          // const aprroval = await Account.findOne();
+          if (approvalMsg !== "approved") {
+            return res
+              .status(422)
+              .json({ message: "Payment pending approval" });
           } else {
             await Account.findOneAndUpdate(
               {},

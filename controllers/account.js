@@ -30,20 +30,18 @@ export const deposit = async (req, res) => {
       { $inc: { account_balance: deposit_amount } },
       { new: true }
     );
-    return res
-      .status(200)
-      .json({
-        message: `You have succesfully deposited Ksh ${deposit_amount}`,
-      });
+    return res.status(200).json({
+      message: `You have succesfully deposited Ksh ${deposit_amount}`,
+    });
   } catch (error) {
     return res.status(500).json(error);
   }
 };
 // find account balance
-export const getAccBalance = async (req, res) => {
+export const getAccDetails = async (req, res) => {
   try {
-    const balance = await Account.findOne();
-    return res.status(200).json(balance.account_balance);
+    const account = await Account.findOne();
+    return res.status(200).json(account);
   } catch (error) {
     return res.status(500).json(error);
   }

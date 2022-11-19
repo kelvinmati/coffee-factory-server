@@ -8,14 +8,14 @@ const auth = (req, res, next) => {
     if (token) {
       jwt.verify(token, process.env.LOGIN_SECRET, (err, decodedToken) => {
         if (err) {
-          res.json("Acces denied!..No authorization token");
+          res.status(401).json("Acces denied!..No authorization token");
         } else {
           next();
         }
       });
     }
   } catch (error) {
-    res.json({ message: "Acces denied!..No authorization token" });
+    res.status(401).json({ message: "Acces denied!..No authorization token" });
   }
 };
 export default auth;

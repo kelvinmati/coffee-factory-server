@@ -3,11 +3,11 @@ import auth from "../middleware/auth.js";
 import {
   createAccount,
   deposit,
-  getAccBalance,
+  getAccDetails,
 } from "../controllers/account.js";
 const router = express.Router();
 router.get("/create-acc", createAccount);
 router.post("/deposit", auth, deposit);
-router.get("/balance", getAccBalance);
+router.get("/details", getAccDetails);
 
 export default router;

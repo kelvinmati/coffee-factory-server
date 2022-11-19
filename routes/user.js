@@ -8,6 +8,8 @@ import {
   specificFarmer,
   getAllStaff,
   forgotPassword,
+  deleteUser,
+  userUpdate,
 } from "../controllers/user.js";
 import auth from "../middleware/auth.js";
 const router = express.Router();
@@ -23,5 +25,9 @@ router.get("/farmerId/:id", auth, specificFarmer);
 router.get("/farmers", getAllFarmers);
 
 router.get("/profile", auth, getUserProfile);
+
+router.delete("/delete-user/:user_id", deleteUser);
+
+router.put("/update/:user_id", userUpdate);
 
 export default router;

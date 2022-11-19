@@ -13,5 +13,13 @@ const accountShema = schema({
     type: Boolean,
     default: false,
   },
+  paymentApproval: {
+    type: String,
+    // waiting approval, approved, cancelled
+  },
+  approvalAmount: {
+    type: Number,
+    default: 0,
+  },
 });
 export default mongoose.model("account", accountShema);
