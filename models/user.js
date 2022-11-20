@@ -58,7 +58,16 @@ const userSchema = schema(
       default: false,
       // required: true,
     },
-
+    requestData: [
+      {
+        type: schema.Types.ObjectId,
+        ref: "request",
+      },
+    ],
+    paymentRequest: {
+      type: String,
+      default: "not sent",
+    },
     paymentRecord: [
       {
         type: schema.Types.ObjectId,

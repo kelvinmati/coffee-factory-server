@@ -161,7 +161,8 @@ export const getUserProfile = async (req, res) => {
     const decoded = jwt.verify(token, process.env.LOGIN_SECRET);
     const currentUser = await User.findOne({ _id: decoded.id })
       .populate("coffeeDetails")
-      .populate("paymentRecord");
+      .populate("paymentRecord")
+      .populate("requestData");
     // check if the array has data
     const coffeeDetailsArr = currentUser?.coffeeDetails;
     if (coffeeDetailsArr?.length == 0) {
