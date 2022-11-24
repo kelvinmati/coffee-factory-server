@@ -113,7 +113,7 @@ export const notifyManager = async (req, res) => {
             {},
             {
               $set: {
-                paymentApproval: `Ksh ${totalAmout} waiting aprroval`,
+                paymentApproval: "waiting",
                 approvalAmount: totalAmout,
               },
             },
@@ -265,17 +265,7 @@ export const notifySinglePayment = async (req, res) => {
   }
 };
 
-// get all waiting requests
-export const getRequests = async (req, res) => {
-  try {
-    const requests = await Requests.find({ status: "waiting approval" });
-    return res.status(200).json(requests);
-  } catch (error) {
-    return res.status(500).json(error);
-  }
-};
-
-// // approve multiple payments
+// approve multiple payments
 export const approveMultiplePayment = async (req, res) => {
   try {
     const account = await Account.findOne();
@@ -303,6 +293,7 @@ export const approveMultiplePayment = async (req, res) => {
     return res.status(500).json(error);
   }
 };
+
 // approve single payment
 export const approvePayment = async (req, res) => {
   const { requestId } = req.params;
@@ -336,13 +327,50 @@ export const approvePayment = async (req, res) => {
     return res
       .status(200)
       .json({ message: "You have succesfully approved payment" });
-    // const account = await Account.findOne();
-    // const requestedApprovalAmount = account.approvalAmount; //amount to approve
-    // const accountBalance = account.account_balance; //account balance
   } catch (error) {
     return res.status(500).json(error);
   }
 };
+
+// reject multiple payment
+export const rejectMultiplePayments = async (req, res) => {
+  try {
+    await Account.findOneAndUpdate(
+      {},
+      {
+        $set: {
+          paymentApproval: "rejected",
+        },
+      },
+      { new: true }
+    );
+    return res.status(404).json({ message: "Payment approval rejected" });
+  } catch (error) {
+    return res.ststus(500).json(error);
+  }
+};
+
+// reject single payment
+export const rejectSinglePayment = async (req, res) => {
+  const { requestId } = req.params;
+  try {
+    const foundRequest = await Requests.findById({ _id: requestId });
+    await Requests.findByIdAndUpdate(
+      { _id: requestId },
+      { $set: { status: "rejected" } },
+      { new: true }
+    );
+    await Farmers.findByIdAndUpdate(
+      { _id: foundRequest.farmer_id },
+      { $set: { paymentRequest: "rejected" } },
+      { new: true }
+    );
+    return res.status(404).json({ message: "Payment approval rejected" });
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+};
+
 // make single payment
 export const makeSinglePayment = async (req, res) => {
   const account = await Account.findOne();
@@ -501,7 +529,7 @@ export const payAllMng = async (req, res) => {
   }
 };
 
-// pay all farmers
+// pay all farmers by staff
 export const payAll = async (req, res) => {
   const account = await Account.findOne();
   let approvalMsg = account.paymentApproval;
@@ -537,49 +565,54 @@ export const payAll = async (req, res) => {
           // console.log("approvalMsg", approvalMsg);
           // continue if approved
           // const aprroval = await Account.findOne();
-          if (approvalMsg !== "approved") {
+          if (approvalMsg !== "approved")
             return res
               .status(422)
               .json({ message: "Payment pending approval" });
-          } else {
-            await Account.findOneAndUpdate(
-              {},
-              { $inc: { account_balance: -totalAmout } },
-              { new: true }
+
+          await Account.findOneAndUpdate(
+            {},
+            { $inc: { account_balance: -totalAmout } },
+            { new: true }
+          );
+          // loop through all farmers and increase their wallets
+          farmers.map(async (farmer) => {
+            Farmers.updateMany(
+              { _id: farmer._id },
+              { $inc: { wallet: farmer.value }, $set: { paid: true } },
+              async (err, updatedRes) => {
+                if (err) return res.status(403).json(err);
+              }
             );
-            // loop through all farmers and increase their wallets
-            farmers.map(async (farmer) => {
-              Farmers.updateMany(
-                { _id: farmer._id },
-                { $inc: { wallet: farmer.value }, $set: { paid: true } },
-                async (err, updatedRes) => {
-                  if (err) return res.status(403).json(err);
-                }
-              );
-              // store payment details in the database
+            // store payment details in the database
 
-              const storedInfo = await Payment.create({
-                name: farmer?.firstname.concat(" ", farmer?.lastname),
-                farmerId: farmer?.farmerId,
-                quantity: farmer?.totalKilos,
-                amount: farmer?.value,
-                phone: farmer?.phone_number,
-              });
-
-              // populate payment record in the farmers model with id,s
-              await Farmers.updateMany(
-                { _id: farmer._id },
-                {
-                  $push: { paymentRecord: storedInfo._id },
-                  $unset: { coffeeDetails: [] },
-                  $set: { totalKilos: 0, value: 0 },
-                }
-              );
+            const storedInfo = await Payment.create({
+              name: farmer?.firstname.concat(" ", farmer?.lastname),
+              farmerId: farmer?.farmerId,
+              quantity: farmer?.totalKilos,
+              amount: farmer?.value,
+              phone: farmer?.phone_number,
             });
-            return res
-              .status(200)
-              .json({ message: "Success,You have paid all farmers" });
-          }
+
+            // populate payment record in the farmers model with id,s
+            await Farmers.updateMany(
+              { _id: farmer._id },
+              {
+                $push: { paymentRecord: storedInfo._id },
+                $unset: { coffeeDetails: [] },
+                $set: { totalKilos: 0, value: 0, paymentRequest: "not sent" },
+              }
+            );
+          });
+          // reset the payment status
+          await Account.findOneAndUpdate(
+            {},
+            { $set: { paymentApproval: "not sent" } },
+            { new: true }
+          );
+          return res
+            .status(200)
+            .json({ message: "Success,You have paid all farmers" });
         }
       }
     );
@@ -646,5 +679,23 @@ export const withdrawal = async (req, res) => {
     }
   } catch (error) {
     res.status(500).json(error);
+  }
+};
+// get all waiting requests
+export const getRequests = async (req, res) => {
+  try {
+    const requests = await Requests.find({ status: "waiting approval" });
+    return res.status(200).json(requests);
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+};
+// get rejected requests
+export const rejectedRequest = async (req, res) => {
+  try {
+    const rejectedRequests = await Requests.find({ status: "rejected" });
+    return res.status(200).json(rejectedRequests);
+  } catch (error) {
+    return res.status(500).json(error);
   }
 };

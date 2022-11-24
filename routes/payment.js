@@ -29,6 +29,9 @@ import {
   notifySinglePayment,
   payAll,
   payAllMng,
+  rejectedRequest,
+  rejectMultiplePayments,
+  rejectSinglePayment,
   resetPayment,
   withdrawal,
 } from "../controllers/payment.js";
@@ -43,7 +46,11 @@ router.get("/notify-manager", notifyManager);
 router.get("/notify-single-payment/:farmerId", auth, notifySinglePayment);
 router.get("/approve-multiple-payments", approveMultiplePayment);
 router.get("/approve-payment/:requestId", approvePayment);
+router.get("/reject-single-payment/:requestId", rejectSinglePayment);
+router.get("/reject-multiple-payment", auth, rejectMultiplePayments);
+
 router.get("/requests", auth, getRequests);
+router.get("/rejected-requests", auth, rejectedRequest);
 
 router.get("/reset", resetPayment);
 

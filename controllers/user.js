@@ -83,6 +83,10 @@ export const uploadFarmerCoffee = async (req, res) => {
         new: true,
       }
     ).populate("coffeeDetails");
+    if (!foundFarmer)
+      return res
+        .status(400)
+        .json({ message: "Failed.The user is not a farmer" });
     // store all the values under quantity key to an array
     const qtyArr = await foundFarmer?.coffeeDetails?.map((weight) => {
       return parseInt(weight?.quantity);
@@ -232,5 +236,29 @@ export const userUpdate = async (req, res) => {
     return res.status(200).json({ message: "User successfully updated" });
   } catch (error) {
     res.status(500).json(error);
+  }
+};
+
+// Search farmers
+export const searchUser = async (req, res) => {
+  try {
+    const foundUser = await User.aggregate([
+      {
+        $search: {
+          index: "default",
+          text: {
+            query: req.params.searchText,
+            path: {
+              wildcard: "*",
+            },
+          },
+        },
+      },
+    ]);
+    if (foundUser.length == 0)
+      return res.status(404).json({ message: "No results found" });
+    return res.status(200).json(foundUser);
+  } catch (error) {
+    return res.status(500).json(error);
   }
 };

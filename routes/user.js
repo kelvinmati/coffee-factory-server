@@ -10,6 +10,7 @@ import {
   forgotPassword,
   deleteUser,
   userUpdate,
+  searchUser,
 } from "../controllers/user.js";
 import auth from "../middleware/auth.js";
 const router = express.Router();
@@ -29,5 +30,7 @@ router.get("/profile", auth, getUserProfile);
 router.delete("/delete-user/:user_id", deleteUser);
 
 router.put("/update/:user_id", userUpdate);
+
+router.get("/search/:searchText", auth, searchUser);
 
 export default router;
