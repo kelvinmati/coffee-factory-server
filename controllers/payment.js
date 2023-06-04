@@ -68,6 +68,8 @@ import dot_env from "dotenv";
 import account from "../models/account.js";
 import jwt from "jsonwebtoken";
 import Requests from "../models/Request.js";
+// const cron=require("node-cron")
+import cron from "node-cron";
 dot_env.config();
 
 // filter payable farmers

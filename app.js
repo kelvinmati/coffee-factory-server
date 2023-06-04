@@ -7,6 +7,9 @@ import accountRoute from "./routes/account.js";
 import dot_env from "dotenv";
 dot_env.config();
 import cors from "cors";
+import conversationRoute from "./routes/conversation.js";
+import messageRoute from "./routes/message.js";
+
 const app = express();
 // express middlewares
 app.use(express.json());
@@ -17,7 +20,8 @@ app.use("/user", authRoute);
 app.use("/coffee", coffeeRoute);
 app.use("/payment", paymentRoute);
 app.use("/account", accountRoute);
-
+app.use("/chat", conversationRoute);
+app.use("/message", messageRoute);
 // db connection
 mongoose
   .connect(`${process.env.MONGODB_URL}`)
@@ -25,5 +29,5 @@ mongoose
   .catch((err) => console.log(err));
 
 // server setup
-const PORT = 4000;
+const PORT = 4001;
 app.listen(PORT, () => console.log(`Server started at port ${PORT}`));

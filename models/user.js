@@ -39,12 +39,12 @@ const userSchema = schema(
       type: Number,
       default: 0,
     },
-    coffeeDetails: [
-      {
-        type: schema.Types.ObjectId,
-        ref: "coffee",
-      },
-    ],
+    // coffeeDetails: [
+    //   {
+    //     type: schema.Types.ObjectId,
+    //     ref: "coffee",
+    //   },
+    // ],
     totalKilos: {
       type: Number,
       default: 0,

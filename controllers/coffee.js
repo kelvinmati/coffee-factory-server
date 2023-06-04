@@ -17,7 +17,7 @@ export const uploadUserCoffee = async (req, res) => {
 
 export const getUserCoffeeDetails = async (req, res) => {
   try {
-    const coffeeDetails = await Coffee.find();
+    const coffeeDetails = await Coffee.find().populate("farmer");
     res.status(200).json(coffeeDetails);
   } catch (error) {
     res.status(500).json(error);

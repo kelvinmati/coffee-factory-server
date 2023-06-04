@@ -6,6 +6,7 @@ import {
   uploadUserCoffee,
 } from "../controllers/coffee.js";
 import auth from "../middleware/auth.js";
+
 const router = express.Router();
 router.post("/upload", uploadUserCoffee);
 router.get("/coffee-details", getUserCoffeeDetails);

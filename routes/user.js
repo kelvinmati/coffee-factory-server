@@ -22,7 +22,7 @@ router.post("/forgot-password", forgotPassword);
 router.get("/staff", getAllStaff);
 
 router.post("/farmer-upload/:farmerId", uploadFarmerCoffee);
-router.get("/farmerId/:id", auth, specificFarmer);
+router.get("/farmerId/:id", specificFarmer);
 router.get("/farmers", getAllFarmers);
 
 router.get("/profile", auth, getUserProfile);

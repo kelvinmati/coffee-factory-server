@@ -71,46 +71,53 @@ export const login = async (req, res) => {
 export const uploadFarmerCoffee = async (req, res) => {
   const { farmerId } = req.params;
   try {
-    const uploadedCoffee = await Coffee.create(req.body);
-    const foundFarmer = await User.findOneAndUpdate(
-      { _id: farmerId, role: "farmer" },
-      {
-        $push: {
-          coffeeDetails: uploadedCoffee._id,
-        },
-      },
-      {
-        new: true,
-      }
-    ).populate("coffeeDetails");
-    if (!foundFarmer)
-      return res
-        .status(400)
-        .json({ message: "Failed.The user is not a farmer" });
-    // store all the values under quantity key to an array
-    const qtyArr = await foundFarmer?.coffeeDetails?.map((weight) => {
-      return parseInt(weight?.quantity);
+    // const uploadedCoffee = await Coffee.create(req.body);
+    const uploadedCoffee = await Coffee.create({
+      farmer: farmerId,
+      coffee_type: req.body.coffee_type,
+      quantity: req.body.quantity,
     });
-    // do the sumation of the weight
-    const totalWeight = qtyArr.reduce((a, b) => {
-      return a + b;
-    });
-    // value of the coffee
-    const totalValue = totalWeight * process.env.RATE;
-    // update Kilo field after upload
-    const populatedFarmer = await User.findByIdAndUpdate(
-      {
-        _id: farmerId,
-      },
-      { $set: { totalKilos: totalWeight, value: totalValue } },
-      { new: true }
-    );
-    const returnedFarmer = {
-      // coffeeDetails: populatedFarmer.coffeeDetails,
-      farmer: populatedFarmer?.firstname.concat(" ", populatedFarmer?.lastname),
-      message: "Succesfully uploaded",
-    };
-    return res.status(200).json(returnedFarmer);
+
+    // const foundFarmer = await User.findOneAndUpdate(
+    //   { _id: farmerId, role: "farmer" },
+    //   {
+    //     $push: {
+    //       coffeeDetails: uploadedCoffee._id,
+    //     },
+    //   },
+    //   {
+    //     new: true,
+    //   }
+    // ).populate("coffeeDetails");
+    // if (!foundFarmer)
+    //   return res
+    //     .status(400)
+    //     .json({ message: "Failed.The user is not a farmer" });
+    // // store all the values under quantity key to an array
+    // const qtyArr = await foundFarmer?.coffeeDetails?.map((weight) => {
+    //   return parseInt(weight?.quantity);
+    // });
+    // // do the sumation of the weight
+    // const totalWeight = qtyArr.reduce((a, b) => {
+    //   return a + b;
+    // });
+    // // value of the coffee
+    // const totalValue = totalWeight * process.env.RATE;
+    // // update Kilo field after upload
+    // const populatedFarmer = await User.findByIdAndUpdate(
+    //   {
+    //     _id: farmerId,
+    //   },
+    //   { $set: { totalKilos: totalWeight, value: totalValue } },
+    //   { new: true }
+    // );
+    // const returnedFarmer = {
+    //   // coffeeDetails: populatedFarmer.coffeeDetails,
+    //   farmer: populatedFarmer?.firstname.concat(" ", populatedFarmer?.lastname),
+    //   message: "Succesfully uploaded",
+    // };
+    // return res.status(200).json(returnedFarmer);
+    return res.status(200).json(uploadedCoffee);
   } catch (error) {
     res.status(500).json(error);
   }
