@@ -22,6 +22,11 @@ app.use("/payment", paymentRoute);
 app.use("/account", accountRoute);
 app.use("/chat", conversationRoute);
 app.use("/message", messageRoute);
+
+// base url
+app.get("/", (req, res) => {
+  res.send("Welcome to Ithe mutiki api");
+});
 // db connection
 mongoose
   .connect(`${process.env.MONGODB_URL}`)
