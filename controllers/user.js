@@ -132,13 +132,13 @@ export const specificFarmer = async (req, res) => {
       .populate("paymentRecord");
     //user.find({ arrayElementName: { $exists: true, $size: 0 } });
     // check if the array has data
-    const coffeeDetailsArr = user?.coffeeDetails;
-    if (coffeeDetailsArr?.length == 0) {
-      // console.log("EMPTY");
-      return res.status(200).json(user);
-    } else {
-      return res.status(200).json(user);
-    }
+    // const coffeeDetailsArr = user?.coffeeDetails;
+    // if (coffeeDetailsArr?.length == 0) {
+    //   // console.log("EMPTY");
+    return res.status(200).json(user);
+    // } else {
+    //   return res.status(200).json(user);
+    // }
   } catch (error) {
     return res.status(500).json(error);
   }
